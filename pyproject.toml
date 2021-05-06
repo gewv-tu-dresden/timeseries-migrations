@@ -5,7 +5,8 @@ description = ""
 authors = ["Karl <karlwolffgang@googlemail.com>"]
 
 [tool.poetry.dependencies]
-python = "^2.7"
+python = "^3.8"
+gewv-timeseries-client = "^0.3.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
