@@ -7,9 +7,12 @@ authors = ["Karl <karlwolffgang@googlemail.com>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 gewv-timeseries-client = "^0.3.3"
+"fs.smbfs" = "^1.0.1"
+python-dotenv = "^0.17.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"
+black = "^21.5b0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

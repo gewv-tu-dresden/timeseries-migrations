@@ -1,0 +1,6 @@
+# IDE 
+.vscode
+
+# python
+*.pyc
+.pytest_cache
