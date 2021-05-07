@@ -1,4 +1,4 @@
-# Migration Script for the Timeseries DB
+# Migration scripts for the Timeseries DB
 
 We collect different python scripts here to move timeseries from different data sources to the Timeseries DB.
 
