@@ -4,4 +4,4 @@ We collect different python scripts here to move timeseries from different data 
 
 ## Possible migrations
 
-- [CSV from a Samba Share](./examples/CSV from Samba Share)
+- [CSV from a Samba Share](examples/CSV%20from%20Samba%20Share)
