@@ -1,0 +1,14 @@
+Zugangsdaten sftp-Server siehe:
+https://wiki.iet.mw.tu-dresden.de/GEWV-Wiki/BBFly/Feldmessungen
+
+Struktur auf dem hidrive-sftp-Server:
+"../Gemeinsam/public/bbfly/station01" (Stationen 01...12)
+
+noch unklar (Stand: 31.05.2021):
+-	In einer Datei kommen immer 3 DeviceIDs vor. An welchen Messpositionen sind die Geräte verbaut? Am besten in Prinzipskizze der definierten Messpositionen einzeichnen. Aktuell lassen sich die Messwerte noch nicht den definierten Messpositionen zuordnen.
+-	Was bedeutet Timestamp=946684800? Nicht angeschlossen?
+-	Was bedeuten Description0=Actuality duration und Description1= Description12=Averaging duration? Wird für alle Werte der Datei eine Mittelwertbildung angewendet?
+-	Was bedeutet Description18= Description19= Description20=OnTime?
+-	Was bedeutet Description11=Fabrication?
+-	Es kommt 6x „Energy“ in der Description vor. Welchen Volumenströmen/Volumen, Vor- und Rücklauftemperaturen und welchen Temperaturendifferenzen sind die zugeordnet? Hier wäre eine eineindeutige Beschriftung wünschenswert.
+-	Warum ist der „Timestamp“ (Spalte A) verschieden zu den Timestamps der nachfolgenden Spalten?
