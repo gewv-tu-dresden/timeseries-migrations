@@ -9,6 +9,7 @@ python = "^3.8"
 gewv-timeseries-client = "^0.3.3"
 "fs.smbfs" = "^1.0.1"
 python-dotenv = "^0.17.1"
+"fs.sshfs" = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.6"

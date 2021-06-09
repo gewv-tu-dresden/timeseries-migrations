@@ -5,3 +5,6 @@
 *.pyc
 .pytest_cache
 .venv
+
+# variables 
+.env
