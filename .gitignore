@@ -4,3 +4,6 @@
 # python
 *.pyc
 .pytest_cache
+
+# variables 
+.env
