@@ -85,7 +85,7 @@ def main():
                         measurement_name=measurement_name,
                         dataframe=df_slice,
                         tag_columns=tag_columns,
-                        additional_tags={"database": side_name},
+                        additional_tags={"database": side_name, "host": "migration"},
                     )
 
                     sleep(1)
