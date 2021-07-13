@@ -75,6 +75,10 @@ def main():
                 if measurement_name == "OUTDOOR_TEMPERATURE":
                     tag_columns.append("devEUI")
 
+                for column in [c for c in df.columns if c not in tag_columns]:
+                    df[column] = pd.to_numeric(df[column], errors="coerce")
+                    df[column] = df[column].astype(float)
+
                 for i in range(0, len(df), MAX_NUM_ENTRIES):
                     start = i
                     end = min(i + MAX_NUM_ENTRIES, len(df))
