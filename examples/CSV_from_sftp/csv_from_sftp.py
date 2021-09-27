@@ -11,7 +11,7 @@ from time import sleep
 load_dotenv()
 
 TARGET_BUCKET = os.getenv("TARGET_BUCKET") or "BBFly"
-PATH_TO_CSVS = "/BBFly/Rohdaten"  ## Wie lautet der Pfad zur InfluxDB?
+PATH_TO_CSVS = "\Gemeinsam\public\bbfly"  # Pfad zu den Messdaten auf dem sftp-Server
 YEARS = ["2016", "2017", "2018", "2019", "2020"]
 
 RE_GATEWAY_ID = r"RVK_GW_([0-9]{3})_rvkc-(.*)"
@@ -206,7 +206,7 @@ COLLUMNS = set(
 # this function parse the dates in the csv
 def DATE_PARSER(date_string: str):
     if type(date_string) is float:
-        return float("NaN")
+        return float("NaN")""
 
     ## return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S%z")
     return datetime.utcfromtimestamp(int(date_string)).strptime(date_string, "%Y-%m-%dT%H:%M:%S%z")

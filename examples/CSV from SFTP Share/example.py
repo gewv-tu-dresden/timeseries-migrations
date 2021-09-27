@@ -6,13 +6,18 @@ import re
 import sys
 from gewv_timeseries_client import TimeseriesClient
 from datetime import datetime
+from pandas.core.frame import DataFrame
 from pytz import UTC
 from time import sleep
+from typing import List
+from loguru import logger
 
 load_dotenv()
-
+# init debugger and configure
 DIR_PATH = os.path.dirname(__file__)
 print(DIR_PATH)
+logger.add(f"{DIR_PATH}\\Debug.log")
+
 #LOG_FILE = os.path.basename(__file__)
 #print(LOG_FILE)
 LOG_FILE = os.path.splitext(os.path.basename(__file__))[0]
@@ -36,17 +41,6 @@ DESCRIPTION_MAPPING = {
 
 # the columns that should imported
 COLLUMNS = set(
-    [
-        INDEX,
-        "DeviceId",
-        "Value0",
-        "Unit0",
-        "Scale0",
-        "Description0",        
-    ]
-)
-
-""" COLLUMNS = set(
     [
         INDEX,
         "DeviceId",
@@ -91,11 +85,12 @@ COLLUMNS = set(
         "Scale9",
         "Description9",
     ]
-) """
+) 
         
 # this function parse the dates in the csv
 def DATE_PARSER(date_string: str):
     return datetime.fromtimestamp(int(date_string), tz=UTC)
+
 
 username = os.getenv("SFTP_USERNAME")
 password = os.getenv("SFTP_PASSWORD")
@@ -122,6 +117,70 @@ client = TimeseriesClient.from_env_properties()
 #   migration script
 # **********************************************************
 
+def get_dataframe_from_index(package: DataFrame, index: str) -> DataFrame:
+    output = DataFrame(index=range(len(package)))
+    output.index = package.index
+
+    output['value'] = package[f'Value{index}'] * package[f'Scale{index}']
+    output['unit'] = package[f'Unit{index}']
+    output['_measurment'] = package[f'Description{index}']
+    output['meterID'] = package['DeviceId']
+
+    return output  
+
+def prepare_lug_package(package: DataFrame) -> List[DataFrame]:
+    output = []
+
+    output.append(get_dataframe_from_index(package=package, index='2'))
+    output.append(get_dataframe_from_index(package=package, index='3'))
+    output.append(get_dataframe_from_index(package=package, index='4'))
+    output.append(get_dataframe_from_index(package=package, index='5'))
+    output.append(get_dataframe_from_index(package=package, index='6'))
+    output.append(get_dataframe_from_index(package=package, index='7'))
+    output.append(get_dataframe_from_index(package=package, index='8'))
+
+    return output
+
+def prepare_efe_package(package: DataFrame) -> List[DataFrame]:
+    output = []
+
+    output.append(get_dataframe_from_index(package=package, index='1'))
+    output.append(get_dataframe_from_index(package=package, index='2'))
+    output.append(get_dataframe_from_index(package=package, index='3'))
+    output.append(get_dataframe_from_index(package=package, index='5'))
+    output.append(get_dataframe_from_index(package=package, index='7'))
+    output.append(get_dataframe_from_index(package=package, index='8'))
+    output.append(get_dataframe_from_index(package=package, index='9'))
+
+    return output
+
+def prepare_nzr_package(package: DataFrame) -> List[DataFrame]:
+    output = []
+
+    output.append(get_dataframe_from_index(package=package, index='0'))
+
+    return output
+
+def write_dataframe(package: DataFrame, station_name: str):
+    try:
+        #for p in packages_to_save:
+        for p in package:
+            #print(package)
+            print(p['_measurment'][0])
+            _measurment = p['_measurment'][0].replace(' ', '_').lower()
+            print(_measurment)
+            del p['_measurment']
+
+            client.write_a_dataframe(
+                project=TARGET_BUCKET,
+                measurement_name=_measurment,
+                dataframe=p,
+                tag_columns=['meterID'],
+                additional_tags={'station': station_name}
+            )
+    except:
+        return
+
 def migrate_csv(path: str, station_name: str, csv_name: str):
     with my_fs.open(path, "r") as csv_file:
         try:
@@ -136,7 +195,8 @@ def migrate_csv(path: str, station_name: str, csv_name: str):
         except OSError as err:
             NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f"{str(NOW)}: OS error: {0}".format(err))
-            logfile.write(f"{str(NOW)}: OS error: {0}".format(err)) 
+            #logfile.write(f"{str(NOW)}: OS error: {0}".format(err))
+            logger.add(f"{str(NOW)}: OS error: {0}".format(err)) 
             return        
         except ValueError:
             NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -182,62 +242,41 @@ def migrate_csv(path: str, station_name: str, csv_name: str):
             logfile.write(f"{str(NOW)}: Receive empty csv. Skip that day.\n")
             return
 
-        print(data.head())
-        print(data['DeviceId'])
-        #print(data['Value0'][1])
-        #row = 1
-        #while row <= len(data):
-        #    print(data['DeviceId'][row])
-        #    row = row + 1
-        #data2 = data
-        #del data2.df['Value0']
-        #print(data)
-        #print(data2)
-        
-        d = {'col1': [1, 2], 'col2': [3, 4]}
-        data_to_store = pd.DataFrame(data=d)
-        #data_to_store = data_to_store.fillna(0)
-        print(data_to_store)
-        
-        #_measurment = DESCRIPTION_MAPPING[data['Description7'][0]]
-        #_measurment = data['Description7'][0]
-        #data['value'] = data['Value7'] * data['Scale7']
-        #data_to_store['value'] = data['Value7'] * data['Scale7']
-        #data['unit'] = data['Unit7']
-        #data_to_store['unit'] = data['Unit7']
-        #data['meterID'] = data['DeviceId']
-        #data_to_store['meterID'] = data['DeviceId']
-        #del data['col1']
-        #del data['col2']
-        #del data['Value7']
-        #del data['Unit7']
-        #del data['Scale7']
-        #del data['Description7']
-        #del data['DeviceId']
+        packages_to_save = []
 
-        _measurment = DESCRIPTION_MAPPING[data['Description0'][0]]
-        #_measurment = data['Description2']
-        data['value'] = data['Value0'] * data['Scale0']
-        data['unit'] = data['Unit0']
-        data['meterID'] = data['DeviceId']       
-        del data['Value0']
-        del data['Unit0']
-        del data['Scale0']
-        del data['Description0']
-        del data['DeviceId']
-       
-        
+        package_nzr = data[data.DeviceId.str.startswith('NZR')]
+        package_lug = data[data.DeviceId.str.startswith('LUG')]
+        package_efe = data[data.DeviceId.str.startswith('EFE')]
 
-        print(data)
-        #print(data_to_store)
-        client.write_a_dataframe(
-            project=TARGET_BUCKET,
-            measurement_name=_measurment,
-            dataframe=data,
-            #dataframe=data_to_store,
-            tag_columns=['meterID'],
-            additional_tags={'station': station_name}
-        )
+        packages_to_save.extend(prepare_lug_package(package_lug))
+        #packages_to_save.append(prepare_lug_package(package_lug))
+        #print(package_lug)
+        print(packages_to_save)
+        write_dataframe(packages_to_save, station)
+        packages_to_save = []
+        packages_to_save.extend(prepare_efe_package(package_efe))
+        #packages_to_save.append(prepare_efe_package(package_efe))
+        print(package_efe)
+        write_dataframe(packages_to_save, station)
+        packages_to_save = []
+        packages_to_save.extend(prepare_nzr_package(package_nzr))
+        #packages_to_save.append(prepare_nzr_package(package_nzr))
+        print(package_nzr)  
+        write_dataframe(packages_to_save, station)  
+
+        print(packages_to_save)
+
+        # for p in packages_to_save:
+        #     _measurment = p['_measurment'][0].replace(' ', '_').lower()
+        #     del p['_measurment']
+
+        #     client.write_a_dataframe(
+        #         project=TARGET_BUCKET,
+        #         measurement_name=_measurment,
+        #         dataframe=p,
+        #         tag_columns=['meterID'],
+        #         additional_tags={'station': station_name}
+        #     )
         NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(f"{str(NOW)}: Finish migration. Write {len(data)} points to db.")
         logfile.write(f"{str(NOW)}: Finish migration. Write {len(data)} points to db.\n")
@@ -249,6 +288,7 @@ def migrate_csv(path: str, station_name: str, csv_name: str):
             logfile.write(f"{str(NOW)}: Receive empty csv. Skip that day.\n")
             return
 
+        #with open('path', 'wa')
         uploaded_files.write(f"{csv_name}\n") 
         uploaded_files.close()
         #NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -303,21 +343,8 @@ try:
             NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f"{str(NOW)}: Start to migrate CSV from {station} from {time_in_UTC} (UNIX: {time_in_unix}).")
             logfile.write(f"{str(NOW)}: Start to migrate CSV from {station} from {time_in_UTC} (UNIX: {time_in_unix}).\n")
-            try:
-                migrate_csv(f'{path_to_csvs}/{csv}', station, csv)
-            except Exception:
-                # the migration failed first time. Wait a minute and try again ...
-                NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print(f"{str(NOW)}: Migration failed the first time. Wait a minute and try again ...")
-                logfile.write(f"{str(NOW)}: Migration failed the first time. Wait a minute and try again ...\n")
-                sleep(60)
-                try:
-                    migrate_csv(f'{path_to_csvs}/{csv}', station, csv)
-                except Exception:
-                    NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    print(f"{str(NOW)}: Migration failed the second time. Skip this file.")
-                    logfile.write(f"{str(NOW)}: Migration failed the second time. Skip this file.\n")
-                    continue
+            migrate_csv(f'{path_to_csvs}/{csv}', station, csv)
+            continue
 
         NOW = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         print(f"{str(NOW)}: Measurment migration for the station {station} completed.")
